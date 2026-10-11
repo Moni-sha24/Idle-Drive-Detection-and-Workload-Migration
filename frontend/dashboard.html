@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>IdleDrive Dashboard</title>
+
+<style>
+
+/* ===== BODY ===== */
+body{
+    margin:0;
+    font-family:Segoe UI, sans-serif;
+    background: linear-gradient(120deg,#1e3c72,#2a5298);
+    color:white;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar{
+    width:240px;
+    height:100vh;
+    background: rgba(0,0,0,0.3);
+    backdrop-filter: blur(10px);
+    position: fixed;
+    padding-top:20px;
+}
+
+.sidebar h2{
+    text-align:center;
+    margin-bottom:30px;
+}
+
+.sidebar a{
+    display:block;
+    padding:15px 20px;
+    color:white;
+    text-decoration:none;
+}
+
+.sidebar a:hover{
+    background: rgba(255,255,255,0.2);
+}
+
+/* ===== MAIN ===== */
+.main{
+    margin-left:240px;
+    padding:20px;
+}
+
+/* ===== HEADER ===== */
+.header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.logout{
+    padding:8px 16px;
+    border:none;
+    border-radius:20px;
+    background:#ff4b5c;
+    color:white;
+    cursor:pointer;
+}
+
+/* ===== BUTTON ===== */
+.action-btn{
+    margin-top:20px;
+    padding:12px 25px;
+    background: linear-gradient(to right,#00c6ff,#0072ff);
+    color:white;
+    border:none;
+    border-radius:25px;
+    font-size:16px;
+    cursor:pointer;
+}
+
+/* ===== DRIVE CARD ===== */
+.drive-item{
+    margin-top:15px;
+    background: rgba(255,255,255,0.15);
+    padding:15px;
+    border-radius:12px;
+}
+
+/* ===== PROGRESS BAR ===== */
+.progress-bar{
+    width:100%;
+    height:15px;
+    background: rgba(255,255,255,0.3);
+    border-radius:10px;
+    margin-top:10px;
+}
+
+.progress-fill{
+    height:100%;
+    border-radius:10px;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <h2>IdleDrive</h2>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="driveDetails.html">View Drive Details</a>
+    <a href="migration.html">Migration</a>
+    <a href="login.html">Logout</a>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<div class="header">
+<h1>Dashboard</h1>
+<button class="logout" onclick="logout()">Logout</button>
+</div>
+
+<h2>Available Drives</h2>
+
+<button class="action-btn" onclick="fetchDrives()">Scan Drives</button>
+
+<div id="driveList"></div>
+
+<button class="action-btn" onclick="goToDriveDetails()">View Drive Details</button>
+
+</div>
+
+<script>
+
+/* LOGOUT */
+function logout(){
+window.location.href="login.html";
+}
+
+/* GO TO DETAILS */
+function goToDriveDetails(){
+window.location.href="driveDetails.html";
+}
+
+/* FETCH DRIVES */
+async function fetchDrives(){
+
+const driveList=document.getElementById("driveList");
+
+driveList.innerHTML="🔍 Scanning drives...";
+
+try{
+
+const response=await fetch("http://localhost:8081/api/drives");
+
+const drives=await response.json();
+
+driveList.innerHTML="";
+
+drives.forEach(drive=>{
+
+const usage=drive.usagePercent.toFixed(1);
+
+let color="green";
+
+if(usage>70) color="red";
+else if(usage>40) color="orange";
+
+const div=document.createElement("div");
+
+div.className="drive-item";
+
+div.innerHTML=`
+
+<b>${drive.name}</b> - ${usage}% used<br>
+Total Space: ${(drive.totalSpace/(1024**3)).toFixed(2)} GB
+
+<div class="progress-bar">
+<div class="progress-fill" style="width:${usage}%; background:${color};"></div>
+</div>
+
+`;
+
+driveList.appendChild(div);
+
+});
+
+}
+
+catch(error){
+
+console.error(error);
+
+driveList.innerHTML="<p style='color:red'>Failed to load drives</p>";
+
+}
+
+}
+
+</script>
+
+</body>
+</html>

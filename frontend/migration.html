@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Workload Migration</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Segoe UI, sans-serif;
+    background:linear-gradient(135deg,#1e3c72,#2a5298);
+    color:white;
+}
+
+/* SIDEBAR */
+.sidebar{
+    width:240px;
+    height:100vh;
+    background:rgba(0,0,0,0.3);
+    backdrop-filter:blur(10px);
+    position:fixed;
+    padding-top:20px;
+}
+
+.sidebar h2{
+    text-align:center;
+    margin-bottom:30px;
+}
+
+.sidebar a{
+    display:block;
+    padding:15px;
+    color:white;
+    text-decoration:none;
+    transition:0.3s;
+}
+
+.sidebar a:hover{
+    background:rgba(255,255,255,0.2);
+}
+
+/* MAIN */
+.main{
+    margin-left:240px;
+    padding:20px;
+}
+
+/* CARD FOR EACH DRIVE */
+.drive-card{
+    background:rgba(255,255,255,0.1);
+    padding:20px;
+    margin-bottom:20px;
+    border-radius:15px;
+    backdrop-filter:blur(10px);
+}
+
+.drive-card h3{
+    margin:0 0 10px 0;
+}
+
+/* STATUS */
+.status-idle{
+    color:lightgreen;
+    font-weight:bold;
+}
+.status-working{
+    color:orange;
+    font-weight:bold;
+}
+.status-overloaded{
+    color:red;
+    font-weight:bold;
+}
+
+/* WARNING MESSAGE */
+.warning{
+    color: #ff5252;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+/* BUTTON */
+button{
+    padding:8px 15px;
+    border:none;
+    border-radius:20px;
+    cursor:pointer;
+    background:#00e676;
+    color:black;
+    font-weight:bold;
+    margin-top:10px;
+}
+button:hover{
+    background:#00c853;
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <h2>ServerApp</h2>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="driveDetails.html">View Drive Details</a>
+    <a href="migration.html">Migration</a>
+    <a href="login.html">Logout</a>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+    <h1>Workload Migration - Drive Status</h1>
+    <button onclick="loadDrives()">Refresh Drives</button>
+    <div id="drivesContainer"></div>
+</div>
+
+<script>
+// Fetch all drives from backend
+async function loadDrives() {
+    const container = document.getElementById("drivesContainer");
+    container.innerHTML = "Loading drives...";
+
+    try {
+        const res = await fetch("http://localhost:8081/api/drives");
+        const drives = await res.json();
+        container.innerHTML = "";
+
+        for (let drive of drives) {
+            const totalGB = (drive.totalSpace / (1024**3)).toFixed(2);
+            const freeGB  = (drive.freeSpace / (1024**3)).toFixed(2);
+            const usedGB  = ((drive.totalSpace - drive.freeSpace) / (1024**3)).toFixed(2);
+
+            const driveDiv = document.createElement("div");
+            driveDiv.className = "drive-card";
+
+            let warningMessage = "";
+            if(drive.status === "Overloaded"){
+                warningMessage = `<p class="warning">⚠️ This drive is full! Consider moving files to other drives to improve system performance.</p>`;
+            }
+
+            driveDiv.innerHTML = `
+                <h3>${drive.name} - Status: <span class="status-${drive.status.toLowerCase()}">${drive.status}</span></h3>
+                <p>Total: ${totalGB} GB | Used: ${usedGB} GB | Free: ${freeGB} GB</p>
+                ${warningMessage}
+            `;
+
+            container.appendChild(driveDiv);
+        }
+
+    } catch(err){
+        console.error(err);
+        container.innerHTML = "Failed to load drives.";
+    }
+}
+
+// Load drives on page load
+window.onload = loadDrives;
+</script>
+
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Drive Details - IdleDrive</title>
+<style>
+/* ===== BODY ===== */
+body{
+    margin:0;
+    font-family:Segoe UI, sans-serif;
+    background: linear-gradient(120deg,#1e3c72,#2a5298);
+    color:white;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar{
+    width:240px;
+    height:100vh;
+    background: rgba(0,0,0,0.3);
+    backdrop-filter: blur(10px);
+    position: fixed;
+    padding-top:20px;
+}
+
+.sidebar h2{
+    text-align:center;
+    margin-bottom:30px;
+}
+
+.sidebar a{
+    display:block;
+    padding:15px 20px;
+    color:white;
+    text-decoration:none;
+    transition:0.3s;
+}
+
+.sidebar a:hover{
+    background: rgba(255,255,255,0.2);
+}
+
+/* ===== MAIN CONTENT ===== */
+.main{
+    margin-left:240px;
+    padding:20px;
+}
+
+/* ===== HEADER ===== */
+.header{
+    display:flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logout{
+    padding:8px 16px;
+    border:none;
+    border-radius:20px;
+    background:#ff4b5c;
+    color:white;
+    cursor:pointer;
+}
+
+.logout:hover{
+    background:#ff2e43;
+}
+
+/* ===== DRIVE TABLE ===== */
+table{
+    width:100%;
+    margin-top:20px;
+    border-collapse: collapse;
+    background: rgba(255,255,255,0.1);
+    border-radius:10px;
+    overflow:hidden;
+}
+
+th, td{
+    padding:12px;
+    text-align:center;
+}
+
+th{
+    background: rgba(0,0,0,0.3);
+}
+
+tr:hover{
+    background: rgba(255,255,255,0.2);
+}
+
+/* BUTTON */
+button{
+    margin-top:20px;
+    padding: 12px 25px;
+    background: linear-gradient(to right,#00c6ff,#0072ff);
+    color:white;
+    border:none;
+    border-radius:25px;
+    font-size:16px;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+button:hover{
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(0,198,255,0.8);
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <h2>IdleDrive</h2>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="drivedetails.html">View Drive Details</a>
+    <a href="migration.html">Migration</a>
+    <a href="login.html">Logout</a>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<div class="header">
+    <h1>Drive Details</h1>
+    <button class="logout" onclick="logout()">Logout</button>
+</div>
+
+<table id="driveTable">
+    <tr>
+        <th>Drive Name</th>
+        <th>Total Space (GB)</th>
+        <th>Free Space (GB)</th>
+        <th>Used Space (GB)</th>
+    </tr>
+    <!-- Drive rows will be added dynamically -->
+</table>
+
+<!-- Check Status button -->
+<button onclick="goToMigration()">Check Status</button>
+
+</div>
+
+<script>
+// Logout
+function logout() {
+    window.location.href = "login.html";
+}
+
+// Navigate to Migration page
+function goToMigration() {
+    window.location.href = "migration.html";
+}
+
+// Fetch and display drive details
+async function fetchDriveDetails() {
+    try {
+        const response = await fetch('http://localhost:8081/api/drives');
+        const drives = await response.json();
+
+        const table = document.getElementById('driveTable');
+
+        // Clear all rows except header
+        table.querySelectorAll('tr:not(:first-child)').forEach(tr => tr.remove());
+
+        drives.forEach(drive => {
+            const usedGB = ((drive.totalSpace - drive.freeSpace)/(1024**3)).toFixed(2);
+            const freeGB = (drive.freeSpace/(1024**3)).toFixed(2);
+            const totalGB = (drive.totalSpace/(1024**3)).toFixed(2);
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${drive.name}</td>
+                <td>${totalGB}</td>
+                <td>${freeGB}</td>
+                <td>${usedGB}</td>
+            `;
+            table.appendChild(tr);
+        });
+
+    } catch (err) {
+        console.error('Error fetching drive details:', err);
+        alert('Failed to fetch drive details. Make sure backend is running.');
+    }
+}
+
+// Fetch on page load
+window.onload = fetchDriveDetails;
+</script>
+</body>
+</html>
